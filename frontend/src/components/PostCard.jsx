@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { API_BASE_URL } from "../api/axios";
 import { likePost } from "../features/post/postSlice";
 import CommentSection from "./CommentSection";
 import "./PostCard.css";
@@ -55,7 +56,7 @@ export default function PostCard({ post }) {
           src={
             typeof post.image === "string" && post.image.startsWith("http")
               ? post.image
-              : `https://social-app-28qw.onrender.com${post.image}`
+              : `${API_BASE_URL}${post.image}`
           }
           alt="post"
           className="post-image"

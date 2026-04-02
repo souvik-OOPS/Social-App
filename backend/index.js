@@ -9,9 +9,10 @@ import postRoutes from './routes/post.routes.js'
 dotenv.config()
 
 const app = express()
+const CLIENT_URL = process.env.CLIENT_URL || 'https://social-app-chi-five.vercel.app'
 
 app.use(cors({
-    origin: "http://social-app-chi-five.vercel.app",
+    origin: CLIENT_URL,
     credentials: true,
     methods: ['POST', 'GET', 'PATCH', 'PUT', 'DELETE']
 }))
