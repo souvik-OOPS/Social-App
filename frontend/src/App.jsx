@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import FeedPage from "./pages/FeedPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-import { setUser } from "./features/auth/authSlice";
+import { clearUser, fetchCurrentUser, setUser } from "./features/auth/authSlice";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
@@ -30,6 +30,11 @@ export default function App() {
         localStorage.removeItem("user");
       }
     }
+
+    dispatch(fetchCurrentUser()).unwrap().catch(() => {
+      dispatch(clearUser());
+      localStorage.removeItem("user");
+    });
   }, [dispatch]);
 
   return (

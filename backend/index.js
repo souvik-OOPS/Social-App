@@ -9,12 +9,23 @@ import postRoutes from './routes/post.routes.js'
 dotenv.config()
 
 const app = express()
-const CLIENT_URL = process.env.CLIENT_URL || 'https://social-app-chi-five.vercel.app'
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    'https://social-app-chi-five.vercel.app',
+    'http://localhost:5173'
+].filter(Boolean)
+
+app.set('trust proxy', 1)
 
 app.use(cors({
-    origin: CLIENT_URL,
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true)
+        }
+        return callback(new Error('Not allowed by CORS'))
+    },
     credentials: true,
-    methods: ['POST', 'GET', 'PATCH', 'PUT', 'DELETE']
+    methods: ['POST', 'GET', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 }))
 app.use(express.json())
 app.use(express.static('public'))

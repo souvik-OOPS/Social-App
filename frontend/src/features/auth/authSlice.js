@@ -1,6 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api/axios";
 
+export const fetchCurrentUser = createAsyncThunk("auth/fetchCurrentUser", async (_, { rejectWithValue }) => {
+    try {
+        const res = await api.get("/auth/me");
+        return res.data.user;
+    } catch (err) {
+        return rejectWithValue(err.response?.data?.message || "Session expired");
+    }
+});
+
 export const signUp = createAsyncThunk("auth/signUp", async (data, { rejectWithValue }) => {
     try {
         const res = await api.post("/auth/signup", data);
@@ -41,8 +50,27 @@ const authSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
+        clearUser: (state) => {
+            state.user = null;
+        },
     },
     extraReducers: (builder) => {
+        builder.addCase(fetchCurrentUser.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(fetchCurrentUser.fulfilled, (state, action) => {
+            state.loading = false;
+            state.user = action.payload;
+            localStorage.setItem("user", JSON.stringify(action.payload));
+        });
+        builder.addCase(fetchCurrentUser.rejected, (state, action) => {
+            state.loading = false;
+            state.user = null;
+            state.error = null;
+            localStorage.removeItem("user");
+        });
+
         // signUp
         builder.addCase(signUp.pending, (state) => {
             state.loading = true;
@@ -94,4 +122,5 @@ export default authSlice.reducer;
 export const {
     setUser,
     clearError,
+    clearUser,
 } = authSlice.actions;
