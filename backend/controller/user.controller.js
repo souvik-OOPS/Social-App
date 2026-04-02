@@ -2,6 +2,15 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import genToken from "../utils/token.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
+};
+
 export const SignUp = async (req, res) => {
     try {
         const { name, email, password } = req.body
@@ -22,12 +31,7 @@ export const SignUp = async (req, res) => {
             password: hashedPassword
         })
         const token = await genToken(user._id);
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: false,
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
+        res.cookie("token", token, cookieOptions)
         const { password: _, ...safeUser } = user.toObject()
         return res.status(201).json({ message: "User created successfully", user: safeUser })
     } catch (error) {
@@ -47,12 +51,7 @@ export const SignIn = async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" })
         }
         const token = await genToken(user._id);
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: false,
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
+        res.cookie("token", token, cookieOptions)
         const { password: _, ...safeUser } = user.toObject()
         return res.status(200).json({ message: "User signed in successfully", user: safeUser })
     } catch (error) {
@@ -62,9 +61,7 @@ export const SignIn = async (req, res) => {
 
 export const signOut = async (req, res) => {
     try {
-        res.clearCookie("token", {
-            httpOnly: true,
-        })
+        res.clearCookie("token", cookieOptions)
         return res.status(200).json({ success: true, message: "User signed out successfully" })
     } catch (error) {
         return res.status(500).json({ success: false, message: "Internal server error" })
