@@ -11,7 +11,7 @@ dotenv.config()
 const app = express()
 
 app.use(cors({
-    origin: "hhttps://social-app-chi-five.vercel.app",
+    origin: "https://social-app-chi-five.vercel.app",
     credentials: true,
     methods: ['POST', 'GET', 'PATCH', 'PUT', 'DELETE']
 }))
