@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addComment } from "../features/post/postSlice";
 import "./CommentSection.css";
 
@@ -15,13 +15,26 @@ function timeAgo(dateStr) {
 
 export default function CommentSection({ postId, comments }) {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const [text, setText] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!text.trim()) return;
-    await dispatch(addComment({ postId, text }));
+    const commentText = text.trim();
+    const tempId = `temp-${Date.now()}`;
     setText("");
+    const result = await dispatch(
+      addComment({
+        postId,
+        text: commentText,
+        tempId,
+        userName: user?.name || "you",
+      }),
+    );
+    if (addComment.rejected.match(result)) {
+      setText(commentText);
+    }
   };
 
   return (

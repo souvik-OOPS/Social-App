@@ -27,7 +27,14 @@ export default function PostCard({ post }) {
     (id) => id === user?._id || id?._id === user?._id,
   );
 
-  const handleLike = () => dispatch(likePost(post._id));
+  const handleLike = () =>
+    dispatch(
+      likePost({
+        postId: post._id,
+        userId: user?._id,
+        userName: user?.name,
+      }),
+    );
 
   return (
     <div className="post-card">

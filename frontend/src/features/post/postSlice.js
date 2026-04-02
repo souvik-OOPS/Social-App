@@ -20,7 +20,7 @@ export const createPost = createAsyncThunk("post/createPost", async (formData, {
     }
 });
 
-export const likePost = createAsyncThunk("post/likePost", async (postId, { rejectWithValue }) => {
+export const likePost = createAsyncThunk("post/likePost", async ({ postId }, { rejectWithValue }) => {
     try {
         const res = await api.put(`/posts/${postId}/like`);
         return { postId, ...res.data };
@@ -29,10 +29,10 @@ export const likePost = createAsyncThunk("post/likePost", async (postId, { rejec
     }
 });
 
-export const addComment = createAsyncThunk("post/addComment", async ({ postId, text }, { rejectWithValue }) => {
+export const addComment = createAsyncThunk("post/addComment", async ({ postId, text, tempId }, { rejectWithValue }) => {
     try {
         const res = await api.post(`/posts/${postId}/comment`, { text });
-        return { postId, comment: res.data.comment };
+        return { postId, comment: res.data.comment, tempId };
     } catch (err) {
         return rejectWithValue(err.response?.data?.message || "Failed to add comment");
     }
@@ -83,19 +83,94 @@ const postSlice = createSlice({
         });
 
         // likePost
+        builder.addCase(likePost.pending, (state, action) => {
+            const { postId, userId, userName } = action.meta.arg;
+            const post = state.posts.find((p) => p._id === postId);
+            if (!post || !userId) return;
+
+            const alreadyLiked = post.likes?.some(
+                (id) => id === userId || id?._id === userId,
+            );
+
+            if (alreadyLiked) {
+                post.likes = post.likes.filter(
+                    (id) => id !== userId && id?._id !== userId,
+                );
+                if (Array.isArray(post.likedUserNames)) {
+                    post.likedUserNames = post.likedUserNames.filter((name) => name !== userName);
+                }
+            } else {
+                post.likes = [...(post.likes || []), userId];
+                if (Array.isArray(post.likedUserNames)) {
+                    post.likedUserNames = [...post.likedUserNames, userName];
+                }
+            }
+        });
         builder.addCase(likePost.fulfilled, (state, action) => {
             const post = state.posts.find(p => p._id === action.payload.postId);
             if (post && action.payload.post) {
                 Object.assign(post, action.payload.post);
             }
         });
+        builder.addCase(likePost.rejected, (state, action) => {
+            const { postId, userId, userName } = action.meta.arg;
+            const post = state.posts.find((p) => p._id === postId);
+            if (post && userId) {
+                const alreadyLiked = post.likes?.some(
+                    (id) => id === userId || id?._id === userId,
+                );
+
+                if (alreadyLiked) {
+                    post.likes = post.likes.filter(
+                        (id) => id !== userId && id?._id !== userId,
+                    );
+                    if (Array.isArray(post.likedUserNames)) {
+                        post.likedUserNames = post.likedUserNames.filter((name) => name !== userName);
+                    }
+                } else {
+                    post.likes = [...(post.likes || []), userId];
+                    if (Array.isArray(post.likedUserNames)) {
+                        post.likedUserNames = [...post.likedUserNames, userName];
+                    }
+                }
+            }
+            state.error = action.payload;
+        });
 
         // addComment
+        builder.addCase(addComment.pending, (state, action) => {
+            const { postId, text, tempId, userName } = action.meta.arg;
+            const post = state.posts.find((p) => p._id === postId);
+            if (!post) return;
+
+            post.comments.push({
+                _id: tempId,
+                text,
+                userName,
+                createdAt: new Date().toISOString(),
+                pending: true,
+            });
+        });
         builder.addCase(addComment.fulfilled, (state, action) => {
             const post = state.posts.find(p => p._id === action.payload.postId);
             if (post) {
-                post.comments.push(action.payload.comment);
+                const commentIndex = post.comments.findIndex(
+                    (comment) => comment._id === action.payload.tempId,
+                );
+                if (commentIndex !== -1) {
+                    post.comments[commentIndex] = action.payload.comment;
+                } else {
+                    post.comments.push(action.payload.comment);
+                }
             }
+        });
+        builder.addCase(addComment.rejected, (state, action) => {
+            const { postId, tempId } = action.meta.arg;
+            const post = state.posts.find((p) => p._id === postId);
+            if (post) {
+                post.comments = post.comments.filter((comment) => comment._id !== tempId);
+            }
+            state.error = action.payload;
         });
     },
 });
