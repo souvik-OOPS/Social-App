@@ -41,7 +41,6 @@ const authSlice = createSlice({
     initialState: {
         user: null,
         loading: false,
-        checkingSession: true,
         error: null,
     },
     reducers: {
@@ -57,16 +56,16 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder.addCase(fetchCurrentUser.pending, (state) => {
-            state.checkingSession = true;
+            state.loading = true;
             state.error = null;
         });
         builder.addCase(fetchCurrentUser.fulfilled, (state, action) => {
-            state.checkingSession = false;
+            state.loading = false;
             state.user = action.payload;
             localStorage.setItem("user", JSON.stringify(action.payload));
         });
-        builder.addCase(fetchCurrentUser.rejected, (state) => {
-            state.checkingSession = false;
+        builder.addCase(fetchCurrentUser.rejected, (state, action) => {
+            state.loading = false;
             state.user = null;
             state.error = null;
             localStorage.removeItem("user");
