@@ -55,7 +55,7 @@ export default function PostCard({ post }) {
           src={
             typeof post.image === "string" && post.image.startsWith("http")
               ? post.image
-              : `http://localhost:8000${post.image}`
+              : `https://social-app-28qw.onrender.com${post.image}`
           }
           alt="post"
           className="post-image"
