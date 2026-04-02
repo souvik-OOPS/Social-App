@@ -7,12 +7,14 @@ import SignupPage from "./pages/SignupPage";
 import { clearUser, fetchCurrentUser, setUser } from "./features/auth/authSlice";
 
 const ProtectedRoute = ({ children }) => {
-  const { user } = useSelector((state) => state.auth);
+  const { user, checkingSession } = useSelector((state) => state.auth);
+  if (checkingSession) return null;
   return user ? children : <Navigate to="/login" replace />;
 };
 
 const GuestRoute = ({ children }) => {
-  const { user } = useSelector((state) => state.auth);
+  const { user, checkingSession } = useSelector((state) => state.auth);
+  if (checkingSession) return null;
   return !user ? children : <Navigate to="/" replace />;
 };
 
