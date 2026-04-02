@@ -257,7 +257,7 @@ ISC
 
 ## 👨‍💻 Author
 
-[Your Name]
+Souvik Ghosh
 
 ## 🆘 Support
 
